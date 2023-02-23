@@ -1,3 +1,8 @@
+<?php
+use Webgrind\Config;
+use Webgrind\library\FileHandler;
+
+?>
 <!DOCTYPE HTML>
 <html>
 <head>
@@ -12,7 +17,7 @@
 	<script src="js/jquery.selectboxes.js" type="text/javascript" charset="utf-8"></script>
 	<script src="js/sprintf.js" type="text/javascript" charset="utf-8"></script>
 	<script type="text/javascript" charset="utf-8">
-		var fileUrlFormat = '<?php echo Webgrind_Config::$fileUrlFormat?>';
+		var fileUrlFormat = '<?php echo Config::$fileUrlFormat?>';
 		var currentDataFile = null;
 		var callInfoLoaded = new Array();
 		var disableAjaxBlock = false;
@@ -68,13 +73,13 @@
 					$("#function_table").trigger('update');
 					<?php
 					$sortCol = 0;
-					foreach (Webgrind_Config::$tableFields as $idx => $field) {
+					foreach (Config::$tableFields as $idx => $field) {
 						if (strpos($field, 'Cost') !== FALSE) {
 							$sortCol = 3 + $idx;
 							break;
 						}
 					}
-					$maxCol = 3 + count(Webgrind_Config::$tableFields);
+					$maxCol = 3 + count(Config::$tableFields);
 					?>
 					var sortCol = parseInt(document.cookie.split("=")[1]);
 					if ( isNaN(sortCol) || sortCol < 3 || sortCol > <?php echo $maxCol?> )
@@ -251,7 +256,7 @@
 							'Total Inclusive Cost'   => 'data.summedInclusiveCost',
 							'Average Inclusive Cost' => 'sprintf("%.2f", data.summedInclusiveCost/data.invocationCount)',
 						);
-						foreach (Webgrind_Config::$tableFields as $field) {
+						foreach (Config::$tableFields as $field) {
 							echo "<td class=\"nr\">'+$dataCodes[$field]+'</td> \\\n\t\t\t\t\t\t";
 						}
 						?>
@@ -275,7 +280,7 @@
 			$.getJSON("index.php",
 				{'op':'version_info'},
 				function(data) {
-					if (isNewer('<?php echo Webgrind_Config::$webgrindVersion?>', data.latest_version)) {
+					if (isNewer('<?php echo Config::$webgrindVersion?>', data.latest_version)) {
 						$("#version_info").append('Version '+data.latest_version+' is available for <a href="'+data.download_url+'">download</a>.');
 					} else {
 						$("#version_info").append('You have the latest version.');
@@ -339,10 +344,6 @@
 				update();
 			}
 
-			<?php if(Webgrind_Config::$checkVersion):?>
-			setTimeout(checkVersion,100);
-			<?php endif?>
-
 			$("#negateFilter").change(function(){
 				$('#callfilter').trigger('keyup');
 			});
@@ -372,7 +373,7 @@
 <body>
 	<div id="head">
 		<div id="logo">
-			<h1>webgrind<sup style="font-size:10px">v<?php echo Webgrind_Config::$webgrindVersion?></sup></h1>
+			<h1>webgrind<sup style="font-size:10px">v<?php echo Config::$webgrindVersion?></sup></h1>
 			<p>profiling in the browser</p>
 		</div>
 		<div id="options">
@@ -383,18 +384,18 @@
 				<div style="float:right;">
 					<label style="margin:0 5px">in</label>
 					<select id="costFormat" name="costFormat">
-						<option value="percent" <?php echo (Webgrind_Config::$defaultCostformat=='percent') ? 'selected' : ''?>>percent</option>
-						<option value="msec" <?php echo (Webgrind_Config::$defaultCostformat=='msec') ? 'selected' : ''?>>milliseconds</option>
-						<option value="usec" <?php echo (Webgrind_Config::$defaultCostformat=='usec') ? 'selected' : ''?>>microseconds</option>
+						<option value="percent" <?php echo (Config::$defaultCostformat=='percent') ? 'selected' : ''?>>percent</option>
+						<option value="msec" <?php echo (Config::$defaultCostformat=='msec') ? 'selected' : ''?>>milliseconds</option>
+						<option value="usec" <?php echo (Config::$defaultCostformat=='usec') ? 'selected' : ''?>>microseconds</option>
 					</select>
 				</div>
 				<div style="float:right;">
 					<label style="margin:0 5px">of</label>
 					<select id="dataFile" name="dataFile" style="width:200px">
 						<option value="0">Auto (newest)</option>
-						<?php foreach(Webgrind_FileHandler::getInstance()->getTraceList() as $trace):?>
+						<?php foreach(FileHandler::getInstance()->getTraceList() as $trace):?>
 							<!-- <option value="<?php echo $trace['filename']?>"><?php echo $trace['invokeUrl']?> (<?php echo $trace['filename']?>) [<?php echo $trace['filesize']?>]</option> -->
-							<option value="<?php echo $trace['filename']?>"><?php echo str_replace(array('%i','%f','%s','%m'),array($trace['invokeUrl'],$trace['filename'],$trace['filesize'],$trace['mtime']),Webgrind_Config::$traceFileListFormat); ?></option>
+							<option value="<?php echo $trace['filename']?>"><?php echo str_replace(array('%i','%f','%s','%m'),array($trace['invokeUrl'],$trace['filename'],$trace['filesize'],$trace['mtime']),Config::$traceFileListFormat); ?></option>
 						<?php endforeach;?>
 					</select>
 					<img class="list_reload" src="img/reload.png" onclick="reloadFilelist()">
@@ -403,13 +404,13 @@
 					<label style="margin:0 5px">Show</label>
 					<select id="showFraction" name="showFraction">
 						<?php foreach(array(100, 99.7, 98, 95, 90, 82, 68, 50, 26) as $i):?>
-						<option value="<?php echo $i/100?>" <?php if ($i==Webgrind_Config::$defaultFunctionPercentage):?>selected="selected"<?php endif;?>><?php echo $i?>%</option>
+						<option value="<?php echo $i/100?>" <?php if ($i==Config::$defaultFunctionPercentage):?>selected="selected"<?php endif;?>><?php echo $i?>%</option>
 						<?php endforeach;?>
 					</select>
 				</div>
 				<div style="clear:both;"></div>
 				<div style="margin:0 70px">
-					<input type="checkbox" name="hideInternals" value="1" <?php echo (Webgrind_Config::$defaultHideInternalFunctions==1) ? 'checked' : ''?> id="hideInternals">
+					<input type="checkbox" name="hideInternals" value="1" <?php echo (Config::$defaultHideInternalFunctions==1) ? 'checked' : ''?>id="hideInternals">
 					<label for="hideInternals">Hide PHP functions</label>
 				</div>
 			</form>
@@ -441,7 +442,7 @@
 						<th> </th>
 						<th><span>Function</span></th>
 						<th> </th>
-						<?php foreach(Webgrind_Config::$tableFields as $field):?>
+						<?php foreach(Config::$tableFields as $field):?>
 						<th><span><?php echo $field?></span></th>
 						<?php endforeach;?>
 					</tr>
@@ -453,10 +454,6 @@
 		<h2 id="hello_message"><?php echo $welcome?></h2>
 		<div id="footer">
 			<input type="button" value="clear files" onclick="clearFiles()"><br><br>
-
-			<?php if(Webgrind_Config::$checkVersion):?>
-			<div id="version_info">&nbsp;</div>
-			<?php endif?>
 			Copyright © 2008-2011 Jacob Oettinger &amp; Joakim Nygård. <a href="http://github.com/jokkedk/webgrind/">webgrind homepage</a>
 		</div>
 	</div>

@@ -22,7 +22,15 @@
         "wiki": "https://github.com/jokkedk/webgrind/wiki",
         "source": "https://github.com/jokkedk/webgrind"
     },
-    "scripts": {
-        "serve": "php -S 0.0.0.0:8080 index.php"
-    }
+    "autoload": {
+        "psr-4": {
+            "Webgrind\\": "."
+        }
+    },
+  "require": {
+    "php": "^8.0",
+    "ext-json": "*",
+    "ext-zlib": "*",
+    "ext-ctype": "*"
+  }
 }

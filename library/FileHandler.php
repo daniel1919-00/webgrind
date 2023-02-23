@@ -1,46 +1,54 @@
 <?php
-require 'Reader.php';
-require 'Preprocessor.php';
+
+namespace Webgrind\library;
+
+use Webgrind\Config;
 
 /**
  * Class handling access to data-files(original and preprocessed) for webgrind.
  * @author Jacob Oettinger
  * @author Joakim Nygård
  */
-class Webgrind_FileHandler
+class FileHandler
 {
-
     private static $singleton = null;
 
-
     /**
-     * @return Singleton instance of the filehandler
+     * @return FileHandler Singleton instance of the FileHandler class
      */
-    public static function getInstance() {
-        if (self::$singleton==null)
+    public static function getInstance(): FileHandler
+    {
+        if (self::$singleton == null)
+        {
             self::$singleton = new self();
+        }
+
         return self::$singleton;
     }
 
-    private function __construct() {
+    public array $files = [];
+
+    private function __construct()
+    {
         // Get list of files matching the defined format
-        $files = $this->getFiles(Webgrind_Config::xdebugOutputFormat(), Webgrind_Config::xdebugOutputDir());
+        $files = $this->getFiles(Config::xdebugOutputFormat(), Config::xdebugOutputDir());
 
         // Get list of preprocessed files
-        $prepFiles = $this->getPrepFiles('/\\'.Webgrind_Config::$preprocessedSuffix.'$/', Webgrind_Config::storageDir());
+        $prepFiles = $this->getPrepFiles('/\\' . Config::$preprocessedSuffix . '$/', Config::storageDir());
         // Loop over the preprocessed files.
-        foreach ($prepFiles as $fileName=>$prepFile) {
-            $fileName = str_replace(Webgrind_Config::$preprocessedSuffix,'',$fileName);
+        foreach ($prepFiles as $fileName => $prepFile)
+        {
+            $fileName = str_replace(Config::$preprocessedSuffix, '', $fileName);
 
             // If it is older than its corrosponding original: delete it.
             // If it's original does not exist: delete it
-            if (!isset($files[$fileName]) || $files[$fileName]['mtime']>$prepFile['mtime'])
+            if (!isset($files[$fileName]) || $files[$fileName]['mtime'] > $prepFile['mtime'])
                 unlink($prepFile['absoluteFilename']);
             else
                 $files[$fileName]['preprocessed'] = true;
         }
         // Sort by mtime
-        uasort($files,array($this,'mtimeCmp'));
+        uasort($files, array($this, 'mtimeCmp'));
 
         $this->files = $files;
     }
@@ -50,15 +58,18 @@ class Webgrind_FileHandler
      *
      * @return void string
      */
-    private function getInvokeUrl($file) {
+    private function getInvokeUrl($file)
+    {
         if (preg_match('/\.webgrind$/', $file))
             return 'Webgrind internal';
 
         // Grab name of invoked file.
         $fp = gzopen($file, 'r');
         $invokeUrl = '';
-        while ((($line = fgets($fp)) !== FALSE) && !strlen($invokeUrl)) {
-            if (preg_match('/^cmd: (.*)$/', $line, $parts)) {
+        while ((($line = fgets($fp)) !== FALSE) && !strlen($invokeUrl))
+        {
+            if (preg_match('/^cmd: (.*)$/', $line, $parts))
+            {
                 $invokeUrl = isset($parts[1]) ? $parts[1] : '';
             }
         }
@@ -74,8 +85,9 @@ class Webgrind_FileHandler
      *
      * @return array Files
      */
-    private function getFiles($format, $dir) {
-        $list = preg_grep($format,scandir($dir));
+    private function getFiles($format, $dir)
+    {
+        $list = preg_grep($format, scandir($dir));
         $files = array();
 
         # Moved this out of loop to run faster
@@ -84,11 +96,12 @@ class Webgrind_FileHandler
         else
             $selfFile = '';
 
-        foreach ($list as $file) {
-            $absoluteFilename = $dir.$file;
+        foreach ($list as $file)
+        {
+            $absoluteFilename = $dir . $file;
 
             // Exclude webgrind preprocessed files
-            if (false !== strstr($absoluteFilename, Webgrind_Config::$preprocessedSuffix))
+            if (false !== strstr($absoluteFilename, Config::$preprocessedSuffix))
                 continue;
 
             // Make sure that script never parses the profile currently being generated. (infinite loop)
@@ -96,15 +109,15 @@ class Webgrind_FileHandler
                 continue;
 
             $invokeUrl = rtrim($this->getInvokeUrl($absoluteFilename));
-            if (Webgrind_Config::$hideWebgrindProfiles && $invokeUrl == dirname(dirname(__FILE__)).DIRECTORY_SEPARATOR.'index.php')
+            if (Config::$hideWebgrindProfiles && $invokeUrl == dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'index.php')
                 continue;
 
             $files[$file] = array('absoluteFilename' => $absoluteFilename,
-                                  'mtime' => filemtime($absoluteFilename),
-                                  'preprocessed' => false,
-                                  'invokeUrl' => $invokeUrl,
-                                  'filesize' => $this->bytestostring(filesize($absoluteFilename))
-                            );
+                'mtime' => filemtime($absoluteFilename),
+                'preprocessed' => false,
+                'invokeUrl' => $invokeUrl,
+                'filesize' => $this->bytestostring(filesize($absoluteFilename))
+            );
         }
         return $files;
     }
@@ -114,38 +127,43 @@ class Webgrind_FileHandler
      *
      * @return array Files
      */
-    private function getPrepFiles($format, $dir) {
-        $list = preg_grep($format,scandir($dir));
+    private function getPrepFiles($format, $dir)
+    {
+        $list = preg_grep($format, scandir($dir));
         $files = array();
 
-        foreach ($list as $file) {
-            $absoluteFilename = $dir.$file;
+        foreach ($list as $file)
+        {
+            $absoluteFilename = $dir . $file;
 
             // Make sure that script does not include the profile currently being generated. (infinite loop)
-            if (function_exists('xdebug_get_profiler_filename') && realpath(xdebug_get_profiler_filename())==realpath($absoluteFilename))
+            if (function_exists('xdebug_get_profiler_filename') && realpath(xdebug_get_profiler_filename()) == realpath($absoluteFilename))
                 continue;
 
             $files[$file] = array('absoluteFilename' => $absoluteFilename,
-                                  'mtime' => filemtime($absoluteFilename),
-                                  'preprocessed' => true,
-                                  'filesize' => $this->bytestostring(filesize($absoluteFilename))
-                            );
+                'mtime' => filemtime($absoluteFilename),
+                'preprocessed' => true,
+                'filesize' => $this->bytestostring(filesize($absoluteFilename))
+            );
         }
         return $files;
     }
+
     /**
      * Get list of available trace files. Optionally including traces of the webgrind script it self
      *
      * @return array Files
      */
-    public function getTraceList() {
+    public function getTraceList()
+    {
         $result = array();
-        foreach ($this->files as $fileName=>$file) {
-            $result[] = array('filename'  => $fileName,
-                              'invokeUrl' => str_replace($_SERVER['DOCUMENT_ROOT'].'/', '', $file['invokeUrl']),
-                              'filesize'  => $file['filesize'],
-                              'mtime'     => date(Webgrind_Config::$dateFormat, $file['mtime'])
-                        );
+        foreach ($this->files as $fileName => $file)
+        {
+            $result[] = array('filename' => $fileName,
+                'invokeUrl' => str_replace($_SERVER['DOCUMENT_ROOT'] . '/', '', $file['invokeUrl']),
+                'filesize' => $file['filesize'],
+                'mtime' => date(Config::$dateFormat, $file['mtime'])
+            );
         }
         return $result;
     }
@@ -159,13 +177,16 @@ class Webgrind_FileHandler
      * @param Cost format for the reader
      * @return Webgrind_Reader Reader for $file
      */
-    public function getTraceReader($file, $costFormat) {
-        $prepFile = Webgrind_Config::storageDir().$file.Webgrind_Config::$preprocessedSuffix;
-        try {
+    public function getTraceReader($file, $costFormat)
+    {
+        $prepFile = Config::storageDir() . $file . Config::$preprocessedSuffix;
+        try
+        {
             $r = new Webgrind_Reader($prepFile, $costFormat);
-        } catch (Exception $e) {
+        } catch (Exception $e)
+        {
             // Preprocessed file does not exist or other error
-            Webgrind_Preprocessor::parse(Webgrind_Config::xdebugOutputDir().$file, $prepFile);
+            Webgrind_Preprocessor::parse(Config::xdebugOutputDir() . $file, $prepFile);
             $r = new Webgrind_Reader($prepFile, $costFormat);
         }
         return $r;
@@ -176,7 +197,8 @@ class Webgrind_FileHandler
      *
      * @return boolean
      */
-    private function mtimeCmp($a, $b) {
+    private function mtimeCmp($a, $b)
+    {
         if ($a['mtime'] == $b['mtime'])
             return 0;
 
@@ -186,17 +208,19 @@ class Webgrind_FileHandler
     /**
      * Present a size (in bytes) as a human-readable value
      *
-     * @param int    $size        size (in bytes)
-     * @param int    $precision    number of digits after the decimal point
+     * @param int $size size (in bytes)
+     * @param int $precision number of digits after the decimal point
      * @return string
      */
-    private function bytestostring($size, $precision = 0) {
+    private function bytestostring($size, $precision = 0)
+    {
         $sizes = array('YB', 'ZB', 'EB', 'PB', 'TB', 'GB', 'MB', 'KB', 'B');
         $total = count($sizes);
 
-        while ($total-- && $size > 1024) {
+        while ($total-- && $size > 1024)
+        {
             $size /= 1024;
         }
-        return round($size, $precision).$sizes[$total];
+        return round($size, $precision) . $sizes[$total];
     }
 }
