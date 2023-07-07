@@ -40,7 +40,10 @@ try
             if ($dataFile == '0')
             {
                 $files = FileHandler::getInstance()->getTraceList();
-                $dataFile = $files[0]['filename'];
+                if($files)
+                {
+                    $dataFile = $files[0]['filename'];
+                }
             }
             $reader = FileHandler::getInstance()->getTraceReader($dataFile, get('costFormat', Config::$defaultCostformat));
             $functions = array();

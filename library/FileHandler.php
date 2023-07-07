@@ -2,6 +2,7 @@
 
 namespace Webgrind\library;
 
+use Exception;
 use Webgrind\Config;
 
 /**
@@ -56,9 +57,8 @@ class FileHandler
     /**
      * Get the value of the cmd header in $file
      *
-     * @return void string
      */
-    private function getInvokeUrl($file)
+    private function getInvokeUrl($file): string
     {
         if (preg_match('/\.webgrind$/', $file))
             return 'Webgrind internal';
@@ -175,19 +175,19 @@ class FileHandler
      *
      * @param string File to read
      * @param Cost format for the reader
-     * @return Webgrind_Reader Reader for $file
+     * @return Reader Reader for $file
      */
     public function getTraceReader($file, $costFormat)
     {
         $prepFile = Config::storageDir() . $file . Config::$preprocessedSuffix;
         try
         {
-            $r = new Webgrind_Reader($prepFile, $costFormat);
+            $r = new Reader($prepFile, $costFormat);
         } catch (Exception $e)
         {
             // Preprocessed file does not exist or other error
             Webgrind_Preprocessor::parse(Config::xdebugOutputDir() . $file, $prepFile);
-            $r = new Webgrind_Reader($prepFile, $costFormat);
+            $r = new Reader($prepFile, $costFormat);
         }
         return $r;
     }
