@@ -186,7 +186,7 @@ class FileHandler
         } catch (Exception $e)
         {
             // Preprocessed file does not exist or other error
-            Webgrind_Preprocessor::parse(Config::xdebugOutputDir() . $file, $prepFile);
+            Preprocessor::parse(Config::xdebugOutputDir() . $file, $prepFile);
             $r = new Reader($prepFile, $costFormat);
         }
         return $r;
