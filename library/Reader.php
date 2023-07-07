@@ -275,7 +275,12 @@ class Reader
 
     private function read($numbers = 1)
     {
-        $values = unpack(self::NR_FORMAT . $numbers, fread($this->filePointer, self::NR_SIZE * $numbers));
+        $readLen = self::NR_SIZE * $numbers;
+        if($readLen < 1)
+        {
+            $readLen = 1;
+        }
+        $values = unpack(self::NR_FORMAT . $numbers, fread($this->filePointer, $readLen));
         if ($numbers == 1)
             return $values[1];
         else
