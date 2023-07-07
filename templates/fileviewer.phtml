@@ -8,7 +8,9 @@
 	<link rel="stylesheet" type="text/css" href="styles/custom.css">
 	<link rel="shortcut icon" type="image/ico" href="favicon.ico">
 	<title>
-		<?php echo pathinfo($file, PATHINFO_FILENAME)?> - webgrind - fileviewer: <?php echo $file?>
+		<?php use Webgrind\Config;
+
+        echo pathinfo($file, PATHINFO_FILENAME)?> - webgrind - fileviewer: <?php echo $file?>
 	</title>
 	<script type="text/javascript" charset="utf-8">
 		$(document).ready(function() {

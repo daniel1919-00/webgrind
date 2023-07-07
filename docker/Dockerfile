@@ -10,10 +10,17 @@ COPY docker/nginx.conf /etc/nginx/nginx.conf
 RUN rm -rf /etc/nginx/http.d/*
 COPY docker/webgrind.conf /etc/nginx/http.d/webgrind.conf
 
+RUN pecl install xdebug \
+    && docker-php-ext-enable xdebug
+
 RUN mv /usr/local/etc/php/php.ini-production /usr/local/etc/php/php.ini
 RUN sed -i "s/\;\?\\s\?error_reporting =.*/error_reporting = E_ALL/" /usr/local/etc/php/php.ini
 RUN sed -i "s/\;\?\\s\?display_startup_errors =.*/display_startup_errors = On/" /usr/local/etc/php/php.ini
 RUN sed -i "s/\;\?\\s\?display_errors =.*/display_errors = On/" /usr/local/etc/php/php.ini
+RUN echo 'zend_extension=xdebug' >> /usr/local/etc/php/php.ini
+RUN echo 'xdebug.mode=profile' >> /usr/local/etc/php/php.ini
+RUN echo 'xdebug.client_host=host.docker.internal' >> /usr/local/etc/php/php.ini
+RUN echo 'xdebug.start_with_request=yes' >> /usr/local/etc/php/php.ini
 
 RUN chown -R nginx:nginx /app
 RUN chmod -R 755 /app

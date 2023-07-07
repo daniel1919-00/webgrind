@@ -75,7 +75,7 @@ class Config extends MasterConfig
 
         return false; // Deny all access.
 
-        //return $file; // Grant access to all files on server.
+//        return $file; // Grant access to all files on server.
 
         // Limit to web root.
         //return isset($_SERVER['DOCUMENT_ROOT'])

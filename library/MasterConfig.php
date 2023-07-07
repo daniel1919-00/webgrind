@@ -4,5 +4,5 @@ namespace Webgrind\library;
 
 class MasterConfig
 {
-    static $webgrindVersion = '2';
+    static $webgrindVersion = '3';
 }
